@@ -213,15 +213,65 @@ app.get("/authors/publications/:publisher_name", (req,res) =>{
     const {
         publisher_name,
     } = req.params;
-        var publisher = db.publications.filter((publisher) => publisher.name === publisher_name);
-        var book = publisher.books;
-        var result = db.authors.filter((author)=> author.books.includes(book));
+    var publisher = db.publications.filter((publisher) => publisher.name == publisher_name)[0];
+    var result =[]; 
+    for (let i = 0; i < db.authors.length; i++) {
+        let author = db.authors[i];
+        for (let j = 0; j < author.books.length; j++) {
+            const a_book = author.books[j];
+            for (let m = 0; m < publisher.books.length; m++) {
+                const p_book = publisher.books[m];
+                if(a_book === p_book){
+                    result.push(author)
+                }
+            }
+        }
+            
+    }
+    var responseObj = {};
+    if(result.length == 0){
+        responseObj = {
+            data: {},
+
+            message: `No authors found for publisher of ${publisher_name}`,
+
+            status: 404
+        }
+    }
+    else{
+        responseObj = {
+            data: result,
+
+            message: `${result.length} authors found for book ID of ${publisher_name}`,
+
+            status: 200
+        }
+    }
+    
+    res.send(responseObj);
+})
+
+/* REST API to Get books based on author name
+    @route /books/author/:author_name
+    @description "GET all books based on authorname" 
+    @method GET
+    @params -
+    @return_type JSON object
+    @content type text/JSON
+*/
+app.get("/books/author/:author_name", (req,res) =>{  
+        const {
+            author_name,
+        } = req.params;
+
+        var req_author = db.authors.filter((author) => author.name === author_name)[0].id;
+        var result = db.books.filter((book) => book.authors.includes(req_author))
         var responseObj = {};
         if(result.length == 0){
             responseObj = {
                 data: {},
 
-                message: `No authors found for publisher of ${publisher_name}`,
+                message: `No books found for the author ${author_name}`,
 
                 status: 404
             }
@@ -230,15 +280,16 @@ app.get("/authors/publications/:publisher_name", (req,res) =>{
             responseObj = {
                 data: result,
 
-                message: `${result.length} authors found for book ID of ${publisher_name}`,
+                message: `${result.length} books found for the author ${author_name}`,
 
                 status: 200
             }
         }
     
-    res.json(responseObj);
-})
 
+    res.json(responseObj);
+   
+})
 
 
 app.listen(port, ()=>{console.log(`listening at http://localhost: ${port}`)})

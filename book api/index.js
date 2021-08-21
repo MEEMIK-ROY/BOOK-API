@@ -1,9 +1,20 @@
 
 
 const express = require('express');
-const app = express();
-const port = "8080";
 const db = require('./db/db')
+const app = express();
+
+app.use(express.urlencoded({extended: true}));
+app.use(express.json());
+app.use(express.raw());
+const port = "8080";
+
+
+
+/* Starting Page*/
+app.get("/", (req,res) =>{
+    res.send("Welcome to Book Management APIs");
+})
 
 /* REST API to Get all books
     @route /books
@@ -291,5 +302,48 @@ app.get("/books/author/:author_name", (req,res) =>{
    
 })
 
+
+/*..................................................................................................................................................*/
+/* REST API to POST books 
+    @route /books
+    @description "POST book to db.books" 
+    @method POST
+    @params -
+    @return_type JSON object
+    @content type application/JSON
+*/
+
+
+app.post("/books", (req,res) =>{
+    const book = req.body;
+
+    if(db.books === undefined){
+        db.books = [book];
+    }
+    else{
+        db.books.push(book);
+    }
+
+    var responseObj = {};
+        if(db.books.length == 0){
+            responseObj = {
+                data: {},
+
+                message: `No books added`,
+
+                status: 404
+            }
+        }
+        else{
+            responseObj = {
+                data: db.books,
+
+                message: `${db.books.length} books present in the database`,
+
+                status: 200
+            }
+        }
+    res.json(responseObj);
+})
 
 app.listen(port, ()=>{console.log(`listening at http://localhost: ${port}`)})
